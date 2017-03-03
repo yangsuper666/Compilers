@@ -7,7 +7,7 @@ const express = require('express');
 let test = new Lex();
 let grammer = [];
 let endname = '';
-for(let index in data) {
+for (let index in data) {
     if (data[index].length > 0) {
         if (data[index] === '@keyword') {
             break;
