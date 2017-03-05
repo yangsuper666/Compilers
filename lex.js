@@ -1,16 +1,18 @@
 const fs = require('fs');
-let colors = require('colors');
-//const data = fs.readFileSync('./lex_grammer.txt', 'utf-8').split('\r\n');
-//const data = fs.readFileSync('./test_grammer.txt', 'utf-8').split('\r\n');
+const colors = require('colors');
 function Lex() {
     this.nfa = {};
     this.dfa = {};
+    this.tokens = [];
     this.vn = new Set();      // set存非终结符
     this.vt = new Set();      // set存终结符 
-    this.keyword = [];        // 关键字
-    this.nfaBegin = 'X';
+    this.keyword = new Set();        // 关键字
+    this.type = new Set();           // 类型
+    this.row = 1;
+    this.col = 1;
+    this.nfaBegin = 'begin';
     // 文法 --> NFA
-    this.transNFA = function(grammer, endName) {
+    this.transNFA = function(grammer, endName){
         for (let i in grammer) {
             let line = grammer[i].split(' ');
             //console.log(line.length);
@@ -21,20 +23,20 @@ function Lex() {
                 this.nfa[line[0]] = {};
                 this.nfa[line[0]]['edge'] = {};
             }
-            //判断是否为可终止状态
+            // 判断是否为可终止状态
             if (this.nfa[line[0]].hasOwnProperty('edge')) {
                 if(!this.nfa[line[0]]['edge'].hasOwnProperty(line[1])){
                     this.nfa[line[0]]['edge'][line[1]] = [];
                     this.nfa[line[0]]['isEndNode'] = false;
                 }
             }
-            //非终止状态
+            // 非终止状态
             if (line.length === 3) {
                 this.vn.add(line[2]);
                 this.nfa[line[0]]['edge'][line[1]].push(line[2]);
             }
             else {
-                //加入终结标志
+                // 加入终结标志
                 this.nfa[line[0]]['endName'] = endName;
                 this.nfa[line[0]]['isEndNode'] = true;
             }
@@ -42,7 +44,7 @@ function Lex() {
     };
 
     // NFA --> DFA
-    this.transDFA = function() {
+    this.transDFA = function(){
         beginState = {
             isVist : false,
             isEndNode : false,
@@ -81,7 +83,7 @@ function Lex() {
                             continue;
                         }
                         nextId = hashSet(newState['dataSet']);
-                        console.log(nextId);
+                        //console.log(nextId);
                         if (!stateSet.hasOwnProperty(nextId)) {
                             stateSet[nextId] = newState;
                             flag = true;
@@ -94,16 +96,21 @@ function Lex() {
     };
 
     // 按照Set产生特殊id
-    hashSet = function(dataSet) {
+    hashSet = function(dataSet){
         let id = '';
         // js Set()特殊处理
-        Array.from(dataSet).sort().forEach(function(value){
-            id += value;
+        Array.from(dataSet).sort().forEach((value, index) => {
+            if (index === 0) {
+                id += value;
+            }
+            else {
+                id = id + '&' + value;
+            }
         });
         return id;
     };
 
-    moveTo = function(vt, State, nfa) {
+    moveTo = function(vt, State, nfa){
         let templateSet = new Set();
         let isEndNode = false;
         let endName = '';
@@ -126,17 +133,79 @@ function Lex() {
         return newState;
     }
 
-    this.getNFA = function() {
-        return this.nfa;
+    this.getToken = function(input, row){
+        let col = 1;
+        let e = 0;
+        let property = '';
+        while (e < input.length) {
+            let next = 'begin'
+            let element = '';
+            while (1) {
+                if (this.dfa[next]['edge'].hasOwnProperty(deal(input[e]))) {
+                    element += input[e];                  
+                    if (this.type.has(element)) {
+                        this.tokens.push({
+                            row : row,
+                            col : col,
+                            property : 'type',
+                            value : element
+                        });
+                        e++, col++;
+                        break;
+                    }
+                    if (this.keyword.has(element)) {
+                        this.tokens.push({
+                            row : row,
+                            col : col,
+                            property : 'keyword',
+                            value : element
+                        });
+                        e++, col++;
+                        break;
+                    }
+                    next = this.dfa[next]['edge'][deal(input[e])];
+                    e++;
+                }
+                else {
+                    property = this.dfa[next]['endName'];
+                    if (property === 'space') {
+                        break;
+                    }                  
+                    this.tokens.push({
+                        row : row,
+                        col : col,
+                        property : property,
+                        value : element
+                    });
+                    col++;
+                    break;
+                }
+            }
+        }
+        
+    }
+
+    deal = function(element) {
+        if (element === ' ') {
+            return 'space';
+        }
+        else {
+            return element;
+        }
+    }
+    
+
+
+    this.setKeyword = function(keyword){
+        this.keyword = new Set([... this.keyword, ...keyword]);
+    };
+ 
+    this.setType = function(type){
+        this.type = new Set([... this.type, ...type]);
     };
 
-
-    this.addKeyword = function(keyword) {
-        this.keyword.push(keyword);
-    };
-
-    // 输出图
-    this.log = function(){
+    // 输出NFA
+    this.logNFA = function(){
         for (let key in this.nfa) {
             console.log('state : %s'.red, key);
             let node = this.nfa[key];
@@ -147,9 +216,26 @@ function Lex() {
             if (node['isEndNode']) {
                 console.log('endName : '.green, node['endName']);
             }
+            else {
+                if (node.hasOwnProperty('endName')) {
+                    console.log('endName : '.green, node['endName']);
+                }
+            }
         }
         console.log(this.vn);
         console.log(this.vt);
     };
+
+    // 输出DFA
+    this.logDFA = function(){
+        for (let key in this.dfa) {
+            if (this.dfa[key]['isEndNode']) {
+                console.log('%s :'.green, key, this.dfa[key]['endName']);
+            }
+            if (this.dfa[key]['dataSet'].size > 1) {
+                console.log('%s :'.red, key, this.dfa[key]['edge']);
+            }
+        }
+    }
 };
 module.exports = Lex;
