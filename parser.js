@@ -2,7 +2,6 @@ const Lex = require('./lex');
 const fs = require('fs');
 const colors = require('colors');
 const data = fs.readFileSync('./lex_grammer.txt', 'utf-8').split('\r\n');
-//let data = fs.readFileSync('./test_grammer.txt', 'utf-8').split('\r\n');
 const input = fs.readFileSync('./input.pas', 'utf-8').split('\r\n');
 const express = require('express');
 let test = new Lex();
@@ -20,7 +19,6 @@ for (let index in data) {
             }
             if (data[index][0] === '@') {
                 endname = data[index].slice(1);
-            // console.log('endname :'.grey, endname);
             }
             else {
                 grammer.push(data[index]);
@@ -54,23 +52,38 @@ for (let index in data) {
         }       
     }
 }
+flag = 0;
 test.transDFA();
 for (let row = 0; row < input.length; row++) {
     if (input[row].length < 1) {
         continue;
     }
     else {
-        let r = row + 1
-        test.getToken(input[row], r);
+        let r = row + 1;
+        try{
+            test.getToken(input[row], r);
+        }
+        catch (err) {
+            flag = 1;
+            console.log('row:%s col:%s err:%s'.red, err.row, err.col, err.err);
+            break;
+        }
     }
 }
-for (let e in test.tokens) {
-    console.log(test.tokens[e].value);
+
+if (flag === 0) {
+    for (let i in test.tokens) {
+        let element = test.tokens[i];
+        let token = element.row + ':' + element.col + ' ' + element.value + ' ' + element.property + '\n';
+        let option = {encoding: 'utf-8'};
+        fs.appendFileSync('./lex-out.txt', token, option);
+    }
 }
+
 let app = new express();
 
 app.get('/', function(req, res){
-    res.send(test.tokens);
+    res.send(test.dfa);
 });
 
 app.listen(3000, function(req, res){

@@ -53,7 +53,6 @@ function Lex() {
         stateSet = {};
         this.dfaBegin = hashSet(beginState['dataSet']);
         stateSet[this.dfaBegin] = beginState;
-
         let flag = true;
         while (flag) {
             flag = false;
@@ -143,6 +142,10 @@ function Lex() {
             while (1) {
                 if (this.dfa[next]['edge'].hasOwnProperty(deal(input[e]))) {
                     element += input[e];                  
+                    next = this.dfa[next]['edge'][deal(input[e])];
+                    e++;
+                }
+                else {
                     if (this.type.has(element)) {
                         this.tokens.push({
                             row : row,
@@ -150,7 +153,7 @@ function Lex() {
                             property : 'type',
                             value : element
                         });
-                        e++, col++;
+                        col++;
                         break;
                     }
                     if (this.keyword.has(element)) {
@@ -160,25 +163,26 @@ function Lex() {
                             property : 'keyword',
                             value : element
                         });
-                        e++, col++;
+                        col++;
                         break;
                     }
-                    next = this.dfa[next]['edge'][deal(input[e])];
-                    e++;
-                }
-                else {
-                    property = this.dfa[next]['endName'];
-                    if (property === 'space') {
-                        break;
-                    }                  
-                    this.tokens.push({
-                        row : row,
-                        col : col,
-                        property : property,
-                        value : element
-                    });
-                    col++;
-                    break;
+                    if (this.dfa[next].hasOwnProperty('endName')) {
+                        property = this.dfa[next]['endName'];
+                        if (property === 'space') {
+                            break;
+                        }                  
+                        this.tokens.push({
+                            row : row,
+                            col : col,
+                            property : property,
+                            value : element
+                        });
+                        col++;
+                        break;                       
+                    }
+                    else {
+                        throw {row: row, col: col,err: 'TypeError'};
+                    }
                 }
             }
         }
@@ -193,8 +197,6 @@ function Lex() {
             return element;
         }
     }
-    
-
 
     this.setKeyword = function(keyword){
         this.keyword = new Set([... this.keyword, ...keyword]);

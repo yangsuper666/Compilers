@@ -1,7 +1,10 @@
+(* this is my first pascal code *)
 program test
-begin 
-      arr:array[1..10] of integer;
-end;
+begin
+      print('hello world');
+      var integer
+      a[i] := 12e.-5
+end.
 
 
 
