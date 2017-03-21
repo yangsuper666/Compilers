@@ -1,15 +1,13 @@
-const fs = require('fs');
 const colors = require('colors');
 function Lex() {
     this.nfa = {};
     this.dfa = {};
     this.tokens = [];
-    this.vn = new Set();      // set存非终结符
-    this.vt = new Set();      // set存终结符 
+    this.vn = new Set();             // set存非终结符
+    this.vt = new Set();             // set存终结符 
     this.keyword = new Set();        // 关键字
     this.type = new Set();           // 类型
-    this.row = 1;
-    this.col = 1;
+    this.tokenName = new Set(['identifier', 'integer-literal', 'real-literal', 'science']);
     this.nfaBegin = 'begin';
     // 文法 --> NFA
     this.transNFA = function(grammer, endName){
@@ -78,7 +76,7 @@ function Lex() {
                             this.dfa[key]['endName'] = moveState.endName;
                         }
                         newState['dataSet'] = new Set([...newState['dataSet'], ...moveState['dataSet']]);
-                        if (newState['dataSet'].size === 0){
+                        if (newState['dataSet'].size === 0) {
                             continue;
                         }
                         nextId = hashSet(newState['dataSet']);
@@ -94,7 +92,7 @@ function Lex() {
         }
     };
 
-    // 按照Set产生特殊id
+    // 按照Set产生id
     hashSet = function(dataSet){
         let id = '';
         // js Set()特殊处理
@@ -137,7 +135,7 @@ function Lex() {
         let e = 0;
         let property = '';
         while (e < input.length) {
-            let next = 'begin'
+            let next = 'begin';
             let element = '';
             while (1) {
                 if (this.dfa[next]['edge'].hasOwnProperty(deal(input[e]))) {
@@ -150,7 +148,7 @@ function Lex() {
                         this.tokens.push({
                             row : row,
                             col : col,
-                            property : 'type',
+                            property : element,
                             value : element
                         });
                         col++;
@@ -160,7 +158,7 @@ function Lex() {
                         this.tokens.push({
                             row : row,
                             col : col,
-                            property : 'keyword',
+                            property : element,
                             value : element
                         });
                         col++;
@@ -170,18 +168,31 @@ function Lex() {
                         property = this.dfa[next]['endName'];
                         if (property === 'space') {
                             break;
-                        }                  
-                        this.tokens.push({
-                            row : row,
-                            col : col,
-                            property : property,
-                            value : element
-                        });
-                        col++;
-                        break;                       
+                        }  
+                        if (this.tokenName.has(property)) {
+                            this.tokens.push({
+                                row : row,
+                                col : col,
+                                property : property,
+                                value : element
+                            });
+                            col++;
+                            break;                            
+                        }
+                        else {
+                            this.tokens.push({
+                                row : row,
+                                col : col,
+                                property : element,
+                                value : element
+                            });
+                            col++;
+                            break;                              
+                        }             
+                      
                     }
                     else {
-                        throw {row: row, col: col,err: 'TypeError'};
+                        throw {row: row, col: col, err: 'TypeError'};
                     }
                 }
             }
@@ -199,11 +210,11 @@ function Lex() {
     }
 
     this.setKeyword = function(keyword){
-        this.keyword = new Set([... this.keyword, ...keyword]);
+        this.keyword = new Set([... this.keyword, ... keyword]);
     };
  
     this.setType = function(type){
-        this.type = new Set([... this.type, ...type]);
+        this.type = new Set([... this.type, ... type]);
     };
 
     // 输出NFA
