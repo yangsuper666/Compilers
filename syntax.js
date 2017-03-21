@@ -60,19 +60,43 @@ function Syntax(){
         return first;
     }
     
-    //判断两个项目集是否相同
-    isEqual = function(){
-
+    //hash项目
+    hashSet = function(item){
+        let hash = '';
+        hash = item.index + '&' + item.pos + '&(';
+        Array.from(item.fro).sort().forEach(value => hash = hash + '[' + value + ']');
+        hash = hash + ')&' + item.length;
+        return hash;
     }
 
     // 判断项目集有无相同项目
-    isInPro = function(){
-
+    isInPro = function(closure, item){
+        for (let i in closure) {
+            if (closure[i].hash === item.hash) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // 判断项目集族中有无相同项目集
-    isInProSet = function(){
-        
+    isInProSet = function(proSet, temp){
+        for (let i in proSet) {
+            let flag = 0;
+            if (temp.length === proSet[i]['set'].length) {
+                for (let j in temp) {
+                    if (proSet[i]['set'][j].hash !== temp[j].hash){
+                        flag = 1;
+                        break;
+                    }
+                }
+                if (flag === 0) {
+                    return i;
+                }
+            }
+            else continue;
+        }
+        return -1;
     }
 
     // 求出first(βa)
@@ -107,15 +131,16 @@ function Syntax(){
                 continue;
             }
             let front = getExtend(par.exp[exp_id], par.firstSet, closure[i]);
+            // console.log(front);
             for (let j in par.exp_dic[target]) {
                 let node_id = parseInt(par.exp_dic[target][j][1]);
                 let length = par.exp_dic[target][j][0].length;
-                closure.push({
-                    index :node_id,
-                    pos : 0,
-                    fro : front,
-                    length : length
-                });
+                let tempItem = {index :node_id, pos : 0, fro : front, length : length};
+                let hash = hashSet(tempItem);
+                tempItem['hash'] = hash;
+                if (!isInPro(closure, tempItem)){
+                    closure.push(tempItem);
+                }
             }
             i++;
         }
@@ -126,12 +151,12 @@ function Syntax(){
     // 构造action和goto表
     this.getSyntaxDFA = function(){
         let tempSet = [];
-        tempSet.push({
-            set: getClosure(src, this),
-            // add others info
-        });
-        let i = 0, count = 0;
+        let hash = hashSet(src);
+        src['hash'] = hash;
+        tempSet.push({id : 0, set: getClosure(src, this)});
+        let i = 0, countId = 0;
         while (i < tempSet.length) {
+            // console.log(tempSet[i]);
             let item = tempSet[i]['set'];
             for (let j in item) {
                 if (item[j].pos >= item[j].length) {
@@ -144,15 +169,29 @@ function Syntax(){
                     fro: item[j].fro, 
                     length: item[j].length
                 };
-                tempSet.push({
-                   set: getClosure(tempItem, this)
-                });
-                count++;
+                let hash = hashSet(tempItem);
+                tempItem['hash'] = hash;
+                let set_clo = getClosure(tempItem, this);
                 if (!tempSet[i].hasOwnProperty('next')) {
                     tempSet[i]['next'] = {};
                 }
-                edge = this.exp[tempItem.index][1][nextpos - 1];
-                tempSet[i]['next'][edge] = count;
+                let edge = this.exp[tempItem.index][1][nextpos - 1];
+                if (!tempSet[i]['next'].hasOwnProperty(edge)) {
+                    tempSet[i]['next'][edge] = [];
+                }                
+                // 判断是否生成重复项目集族
+                // console.log('tem',tempSet);
+                // console.log('set_clo',set_clo);
+                let sameSetId = isInProSet(tempSet, set_clo);
+                if (sameSetId < 0) {
+                    countId++;
+                    let temp = {id: countId, set: set_clo};
+                    tempSet.push(temp);
+                    tempSet[i]['next'][edge].push(countId);
+                }
+                else {
+                    tempSet[i]['next'][edge].push(sameSetId);
+                }
             }
             i++;
         }  

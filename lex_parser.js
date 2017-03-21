@@ -83,13 +83,6 @@ if (flag === 0) {
         fs.appendFileSync('./lex_out.txt', token, option);
     }
 }
-
 let app = new express();
-
-app.get('/', function(req, res){
-    res.send(test.dfa);
-});
-
-app.listen(3000, function(req, res){
-    console.log('you can get dfa at localhost:3000'.blue);
-});
+app.get('/', (req, res) => res.send(test.nfa));
+app.listen(3000, (req, res) => console.log('lex is running...'));

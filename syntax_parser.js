@@ -16,9 +16,9 @@ test.getVn_Vt();
 for(let vn of test.vn.values()){
     test.firstSet[vn] = test.getFirstSet(vn, new Set());
 }
-test.getSyntaxDFA();
 // console.log(test.exp);
 // console.log(test.firstSet);
+test.getSyntaxDFA();
 let app = new express();
 app.get('/', (req, res) => res.send(test.projectSet));
 app.listen(3000, (req, res) => console.log('syntax is running...'));
