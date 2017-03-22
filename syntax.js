@@ -4,10 +4,10 @@ function Syntax(){
     this.vt = new Set();   // 记录终结符
     this.v = new Set();  
     this.firstSet = {};    // first集合
-    this.exp = [];
-    this.exp_dic = {}; // 文法产生式
+    this.exp = [];      
+    this.exp_dic = {};     // 文法产生式
     this.projectSet = [];  // 项目集族
-    let src = {index : 0, pos : 0, fro : new Set(['#']), length : 1}; // 初始项
+    let src = {index : 0, pos : 0, fro : new Set(['#']), length : 1};  // 初始项
     // 读取文法
     this.readSyn = function(grammer, index){
         let noterminate = grammer.split(':')[0];
@@ -147,7 +147,7 @@ function Syntax(){
         // console.log(closure);
         return closure;
     }
-
+    
     // 构造action和goto表
     this.getSyntaxDFA = function(){
         let tempSet = [];
@@ -187,14 +187,22 @@ function Syntax(){
                     countId++;
                     let temp = {id: countId, set: set_clo};
                     tempSet.push(temp);
-                    tempSet[i]['next'][edge].push(countId);
+                    tempSet[i]['next'][edge].push(parseInt(countId));
                 }
                 else {
-                    tempSet[i]['next'][edge].push(sameSetId);
+                    tempSet[i]['next'][edge].push(parseInt(sameSetId));
                 }
             }
             i++;
         }  
+        tempSet.forEach(value => {
+            if (!value.hasOwnProperty('next')) {
+                value['isacc'] = true;
+            }
+            else {
+                value['isacc'] = false;
+            }
+        });
         this.projectSet = tempSet;
     }
 }

@@ -2,7 +2,7 @@ const fs = require('fs');
 const color = require('colors');
 const express = require('express');
 const Syntax = require('./syntax.js');
-const data = fs.readFileSync('./syn_example.txt', 'utf-8').split('\r\n');
+const data = fs.readFileSync('./syn_grammer.txt', 'utf-8').split('\r\n');
 const test = new Syntax();
 // 读取语法文法
 for (let i in data) {

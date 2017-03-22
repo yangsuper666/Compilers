@@ -14,7 +14,7 @@
 
 ## 文件说明
 
-现在主要包括四个文件 ```lex.js``` ```lex_parser.js``` ```syntax.js``` ```syntax_parser.js``` 现在写到了生成项目族，后期完成action表和goto表的构建，并完成语义分析。
+现在主要包括四个文件 ```lex.js``` ```lex_parser.js``` ```syntax.js``` ```syntax_parser.js``` 现在写到了生成项目族，后期语义分析。
 
 ## 词法分析说明
 
@@ -22,7 +22,7 @@
 
 ## 语法分析说明
 
-(完成action和goto表后编写)
+详情请看 编译原理(清华大学)
 
 ## 代码说明
 
@@ -31,16 +31,16 @@
 ```javascript
  this.transNFA = function(grammer, endName){}  // 将正规文法转换成NFA
  this.transDFA = function(){}                  // 将NFA转换成DFA
- hashSet = function(dataSet){}            // js没有像py的hash函数，所以手写一个生成唯一id
- moveTo = function(vt, State, nfa){}      // moveTo 
+ hashSet = function(dataSet){}                 // js没有像py的hash函数，所以手写一个生成唯一id
+ moveTo = function(vt, State, nfa){}           // moveTo 
  this.getToken = function(input, row){}        // 获得token
 ```
 
 ```syntax.js```说明
 
 ```javascript
-this.firstSet = {}      // first集
-this.exp = []           // 记录文法产生式
+this.firstSet = {}        // first集
+this.exp = []             // 记录文法产生式
 // 一个项目
 let src = { 
     index : 0,            // 文法产生式id
@@ -53,7 +53,8 @@ let src = {
 this.projectSet = [{
  	id: 0,
 	set: [{index: 0, pos: 0, fro: Set(), length: 1, hash: "0&0&([#])&1"}, ...], // 存储项目
-	next: { L: [ 1 ], *: [ 2 ]}  // 存储状态转换后next的id
+	next: { L: [ 1 ], *: [ 2 ]},  // 存储状态转换后next的id
+    isacc : false                 // acc               
 },...]
 ```
 
@@ -71,4 +72,4 @@ this.getSyntaxDFA = function(){}           // 构造项目集族
 
 #### look out
 
-代码中引用了express包，所以可以把编译中产生的中间数据以json的形式返回到浏览器查看，方便调试，建议chrome安装json view 这一插件，可以清晰的查看json数据，后期打算做成web的形式，看看有没有时间吧。
+代码中引用了express包，所以可以把编译中产生的中间数据以json的形式返回到浏览器查看，方便调试，建议chrome安装Json View 这一插件，可以清晰的查看json数据，后期打算做成web的形式，看看有没有时间吧。
