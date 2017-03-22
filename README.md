@@ -54,7 +54,7 @@ this.projectSet = [{
  	id: 0,
 	set: [{index: 0, pos: 0, fro: Set(), length: 1, hash: "0&0&([#])&1"}, ...], // 存储项目
 	next: { L: [ 1 ], *: [ 2 ]},  // 存储状态转换后next的id
-    isacc : false                 // acc               
+        isacc : false                 // acc               
 },...]
 ```
 
