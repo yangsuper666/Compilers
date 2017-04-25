@@ -1,15 +1,11 @@
-int a = 1, b = 234 , c = 2e4;
+int a = 1, b = 234;
 function int max(int a,int b){
     if ( a>b ) return  a;
     else return b;
 }
-function double min(int A,int B){
-    if ( A<B ) return  A;
-    else return B;  
-}
 function int main(){
-    double sum_1_to_50 = 1;
-    for(int i=1;i<100;i++){
+    int sum_1_to_50 = 1;
+    for(int i=1;i<100;i+=1){
         if ( i<50 ) break;
         else sum_1_to_50 += i;
     }

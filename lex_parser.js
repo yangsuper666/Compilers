@@ -66,7 +66,7 @@ for (let row = 0; row < input.length; row++) {
         }
         catch (err) {
             flag = 1;
-            console.log('row:%s col:%s err:%s'.red, err.row, err.col, err.err);
+            console.log('row:%s col:%s error:%s'.red, err.row, err.col, err.err);
             break;
         }
     }

@@ -7,7 +7,10 @@ function Syntax(){
     this.exp = [];      
     this.exp_dic = {};     // 文法产生式
     this.projectSet = [];  // 项目集族
+    this.action = [];      // action表
+    this.goto = [];        // goto表
     let src = {index : 0, pos : 0, fro : new Set(['#']), length : 1};  // 初始项
+    
     // 读取文法
     this.readSyn = function(grammer, index){
         let noterminate = grammer.split(':')[0];
@@ -72,11 +75,11 @@ function Syntax(){
     // 判断项目集有无相同项目
     isInPro = function(closure, item){
         for (let i in closure) {
-            if (closure[i].hash === item.hash) {
-                return true;
+            if (closure[i].index === item.index && closure[i].pos === item.pos) {
+                return i;
             }
         }
-        return false;
+        return -1;
     }
 
     // 判断项目集族中有无相同项目集
@@ -131,24 +134,27 @@ function Syntax(){
                 continue;
             }
             let front = getExtend(par.exp[exp_id], par.firstSet, closure[i]);
-            // console.log(front);
             for (let j in par.exp_dic[target]) {
                 let node_id = parseInt(par.exp_dic[target][j][1]);
                 let length = par.exp_dic[target][j][0].length;
                 let tempItem = {index :node_id, pos : 0, fro : front, length : length};
                 let hash = hashSet(tempItem);
                 tempItem['hash'] = hash;
-                if (!isInPro(closure, tempItem)){
+                let flag = isInPro(closure, tempItem);
+                if ( flag === -1){
                     closure.push(tempItem);
+                }
+                else {
+                    closure[flag]['fro'] = new Set([... tempItem['fro'], ... closure[flag]['fro']]);
+                    closure[flag]['hash'] = hashSet(closure[flag]);
                 }
             }
             i++;
         }
-        // console.log(closure);
         return closure;
     }
     
-    // 构造action和goto表
+    // 构造项目集族
     this.getSyntaxDFA = function(){
         let tempSet = [];
         let hash = hashSet(src);
@@ -156,7 +162,6 @@ function Syntax(){
         tempSet.push({id : 0, set: getClosure(src, this)});
         let i = 0, countId = 0;
         while (i < tempSet.length) {
-            // console.log(tempSet[i]);
             let item = tempSet[i]['set'];
             for (let j in item) {
                 if (item[j].pos >= item[j].length) {
@@ -178,10 +183,15 @@ function Syntax(){
                 let edge = this.exp[tempItem.index][1][nextpos - 1];
                 if (!tempSet[i]['next'].hasOwnProperty(edge)) {
                     tempSet[i]['next'][edge] = [];
-                }                
+                }
+                if (edge === '$') {
+                    tempSet[i]['next']['$'].push({
+                        exp_id : item[j].index,
+                        vt : Array.from(item[j].fro)
+                    });
+                    continue;
+                }             
                 // 判断是否生成重复项目集族
-                // console.log('tem',tempSet);
-                // console.log('set_clo',set_clo);
                 let sameSetId = isInProSet(tempSet, set_clo);
                 if (sameSetId < 0) {
                     countId++;
@@ -196,14 +206,71 @@ function Syntax(){
             i++;
         }  
         tempSet.forEach(value => {
-            if (!value.hasOwnProperty('next')) {
-                value['isacc'] = true;
-            }
-            else {
-                value['isacc'] = false;
+            value['isacc'] = false;
+            for (let i in value['set']) {
+                value['set'][i]['fro'] = Array.from(value['set'][i]['fro']);
+                if (value['set'][i]['index'] === 0 && value['set'][i]['pos'] === 1) {
+                    value['isacc'] = true;
+                }
             }
         });
         this.projectSet = tempSet;
+    }
+
+    // 构造Action和Goto表
+    this.getAction_Goto = function(){
+        let Vn = this.vn;
+        let Vt = this.vt;
+        Vn.delete("S1");
+        // Vn.delete('start1');
+        Vn = Array.from(Vn);
+        Vt.delete("$");
+        Vt = Array.from(Vt);
+        for (let i in this.projectSet) {
+            let tempAction = {};
+            let tempGoto = {};
+            // tempAction['#'] = {};
+            let pro = this.projectSet[i];
+            if (pro.hasOwnProperty('next')) {
+                for (let j in Vt) {
+                    
+                    if (pro['next'].hasOwnProperty(Vt[j])) {
+                        tempAction[Vt[j]] = {};
+                        tempAction[Vt[j]]['isend'] = false;
+                        tempAction[Vt[j]]['next'] = pro['next'][Vt[j]];
+                    }
+                }
+                if (pro['next'].hasOwnProperty('$')) {
+                    let temp = pro['next']['$'];
+                    for (let t in temp) {
+                        for (let v in temp[t]['vt']) {
+                            tempAction[temp[t]['vt'][v]] = {};
+                            tempAction[temp[t]['vt'][v]]['isend'] = true;
+                            tempAction[temp[t]['vt'][v]]['next'] = temp[t].exp_id;
+                        }
+                    }
+                }
+                for (let k in Vn) {
+                    // tempGoto[Vn[k]] = []; 
+                    if (pro['next'].hasOwnProperty(Vn[k])) {
+                        tempGoto[Vn[k]] = pro['next'][Vn[k]];
+                    }              
+                }               
+            }
+            else {
+                // for (let j in Vt) tempAction[Vt[j]] = {};           
+                // for (let k in Vn) tempGoto[Vn[k]] = [];
+                let temp = pro['set'][0];
+                let index = temp.index;
+                for (let l in temp['fro']) {
+                    tempAction[temp['fro'][l]] = {};
+                    tempAction[temp['fro'][l]]['isend'] = true;
+                    tempAction[temp['fro'][l]]['next'] = index;
+                }
+            }
+            this.action.push(tempAction);
+            this.goto.push(tempGoto);
+        }
     }
 }
 module.exports = Syntax;
