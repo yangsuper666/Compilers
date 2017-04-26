@@ -221,10 +221,10 @@ function Syntax(){
     this.getAction_Goto = function(){
         let Vn = this.vn;
         let Vt = this.vt;
-        Vn.delete("S1");
+        // Vn.delete("S1");
         // Vn.delete('start1');
         Vn = Array.from(Vn);
-        Vt.delete("$");
+        // Vt.delete("$");
         Vt = Array.from(Vt);
         for (let i in this.projectSet) {
             let tempAction = {};
@@ -258,8 +258,6 @@ function Syntax(){
                 }               
             }
             else {
-                // for (let j in Vt) tempAction[Vt[j]] = {};           
-                // for (let k in Vn) tempGoto[Vn[k]] = [];
                 let temp = pro['set'][0];
                 let index = temp.index;
                 for (let l in temp['fro']) {

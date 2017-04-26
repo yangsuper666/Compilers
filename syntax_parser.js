@@ -2,7 +2,9 @@ const fs = require('fs');
 const color = require('colors');
 const express = require('express');
 const Syntax = require('./syntax.js');
-const data = fs.readFileSync('./syn_grammer2.txt', 'utf-8').split('\r\n');
+const data = fs.readFileSync('./syn_grammer.txt', 'utf-8').split('\r\n');
+// const data = fs.readFileSync('./syn_grammer1.txt', 'utf-8').split('\r\n');
+// const data = fs.readFileSync('./syn_grammer2.txt', 'utf-8').split('\r\n');
 const test = new Syntax();
 // 读取语法文法
 for (let i in data) {
@@ -42,34 +44,54 @@ vt.add('#');
 let exp = test.exp;
 sign.push('#');
 state.push(0);
+console.log('状态栈: '.blue + state + ' 符号栈: '.green + sign + ' 输入符号串: '.red + token);
 while (token.length > 0) {
     // 终结符
     if (pro[state[i]].isacc) {
-        console.log('ACCEPT'.blue);
-        break;
+        if (token.length === 1) {
+            console.log('ACCEPT'.blue);
+            break;
+        }
+        else {
+            state = [0];
+            sign = ['#'];
+            i = 0;
+            j = 0;
+            token.shift();
+            continue;
+        }
     }
     t = token.shift();
     if (vt.has(t)) {
         if (action[state[i]].hasOwnProperty(t)) {
             if (!action[state[i]][t]['isend']) {
                 state.push(action[state[i]][t]['next'][0]);
-                sign.push(t);
+                sign.push(t);  
                 i = i + 1;
-                j = j + 1;                
+                j = j + 1;   
+                console.log('状态栈: '.blue + state + ' 符号栈: '.green + sign + ' 输入符号串: '.red + token);             
             }
             else {
                 token.unshift(t);
                 let index = action[state[i]][t]['next'];
                 let temp = exp[index][0];
-                let num = exp[index][1].length;
-                i = i - num;
-                j = j - num;
-                while(num > 0) {
-                    sign.pop();
-                    state.pop();
-                    num = num - 1;
+                console.log('规约式:'.yellow + exp[index][0] + '->' + exp[index][1]);
+                if (exp[index][1].length === 1 && exp[index][1][0] === '$') {
+                    token.unshift(temp);
                 }
-                token.unshift(temp);
+                else {
+                    let num = exp[index][1].length;
+                    i = i - num;
+                    j = j - num;
+                    while(num > 0) {
+                        sign.pop();
+                        state.pop();
+                        num = num - 1;
+                    }
+                    token.unshift(temp);
+                }
+                
+                console.log('状态栈: '.blue + state + ' 符号栈: '.green + sign + ' 输入符号串: '.red + token);
             }
         }
         else {
@@ -85,7 +107,13 @@ while (token.length > 0) {
                     state.push(goto[state[i]][t][1]);
                 }
                 else {
-                    state.push(goto[state[i]][t][0]);
+                    if(action[goto[state[i]][t][0]].hasOwnProperty(token[0])||goto[goto[state[i]][t][0]].hasOwnProperty(token[0])){
+                        state.push(goto[state[i]][t][0]);
+                    }
+                    else{
+                        console.log('ERROR'.red);
+                        break;                        
+                    }
                 }   
             }
             else {
@@ -93,7 +121,8 @@ while (token.length > 0) {
             }     
             sign.push(t);
             i = i + 1;
-            j = j + 1;      
+            j = j + 1;
+            console.log('状态栈: '.blue + state + ' 符号栈: '.green + sign + ' 输入符号串: '.red + token);   
         }
         else {
             console.log('ERROR'.red);

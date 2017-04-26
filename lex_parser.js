@@ -4,7 +4,7 @@ const express = require('express');
 const Lex = require('./lex');
 const data = fs.readFileSync('./lex_grammer.txt', 'utf-8').split('\r\n');
 const input = fs.readFileSync('./input.cc', 'utf-8').split('\r\n');
-const space = "    ";
+const space = " ";
 let test = new Lex();
 let grammer = [];
 let keyword = new Set();
@@ -76,12 +76,18 @@ if (flag === 0) {
     if (fs.existsSync('./lex_out.txt')) {
         fs.unlinkSync('./lex_out.txt');
     }
+    if (fs.existsSync('./out.txt')) {
+        fs.unlinkSync('./out.txt');
+    }
+    let option = {encoding: 'utf-8'};
     for (let i in test.tokens) {
         let element = test.tokens[i];
-        let token = element.row + ':' + element.col + space + element.property + space + element.value  + '\n';
-        let option = {encoding: 'utf-8'};
+        let token = element.row + ':' + element.col + space + element.property + space + element.value  + '\r\n';
         fs.appendFileSync('./lex_out.txt', token, option);
+        fs.appendFileSync('./out.txt', element.property + '\r\n', option);
+        if (element.property === ';') fs.appendFileSync('./out.txt', '#' + '\r\n', option);
     }
+    fs.appendFileSync('./out.txt', '#', option);
 }
 let app = new express();
 app.get('/', (req, res) => res.send(test.nfa));
