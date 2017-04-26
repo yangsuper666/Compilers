@@ -46,16 +46,16 @@ function Lex() {
     this.type = new Set();                            // 类型
     this.tokenName = new Set(['identifier', 'integer-literal', 'real-literal', 'science', 'string']);
     this.nfaBegin = 'begin';
-  	deal = function(element) {};                      // 私有函数处理空格
-  	hashSet = function(dataSet){};		          // js没有像py的hash函数，所以手写一个生成唯一id标记dfa
-        moveTo = function(vt, State, nfa){};              // NFA->DFA时采用的moveTo()
-  	this.transNFA = function(grammer, endName){};     // 生成NFA
-  	this.transDFA = function(){};                     // NFA->DFA
-   	this.getToken = function(input, row){};           // 在lex_parser.js中调用产生token
-  	this.setKeyword = function(keyword){};            // 在lex_parser.js中调用设置关键字
-  	this.setType = function(type){};				  // 在lex_parser.js中调用设置类型
-  	this.logNFA = function(){};						  // 输出NFA图
-  	this.logDFA = function(){};                       // 输出DFA图
+    deal = function(element) {};                      // 私有函数处理空格
+    hashSet = function(dataSet){};		      // js没有像py的hash函数，所以手写一个生成唯一id标记dfa
+    moveTo = function(vt, State, nfa){};              // NFA->DFA时采用的moveTo()
+    this.transNFA = function(grammer, endName){};     // 生成NFA
+    this.transDFA = function(){};                     // NFA->DFA
+    this.getToken = function(input, row){};           // 在lex_parser.js中调用产生token
+    this.setKeyword = function(keyword){};            // 在lex_parser.js中调用设置关键字
+    this.setType = function(type){};		      // 在lex_parser.js中调用设置类型
+    this.logNFA = function(){};			      // 输出NFA图
+    this.logDFA = function(){};                       // 输出DFA图
 }
 ```
 
