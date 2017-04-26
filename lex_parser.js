@@ -2,8 +2,9 @@ const fs = require('fs');
 const colors = require('colors');
 const express = require('express');
 const Lex = require('./lex');
-const data = fs.readFileSync('./lex_grammer.txt', 'utf-8').split('\r\n');
+const data = fs.readFileSync('./lex_grammar.txt', 'utf-8').split('\r\n');
 const input = fs.readFileSync('./input.cc', 'utf-8').split('\r\n');
+// const input = fs.readFileSync('./input1.cc', 'utf-8').split('\r\n');
 const space = " ";
 let test = new Lex();
 let grammer = [];
@@ -90,5 +91,6 @@ if (flag === 0) {
     fs.appendFileSync('./out.txt', '#', option);
 }
 let app = new express();
-app.get('/', (req, res) => res.send(test.nfa));
+app.get('/nfs', (req, res) => res.send(test.nfa));
+app.get('/', (req, res) => res.send(test.dfa));
 app.listen(3000, (req, res) => console.log('lex is running...'));

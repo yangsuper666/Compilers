@@ -1,4 +1,3 @@
-const colors = require('colors');
 function Lex() {
     this.nfa = {};
     this.dfa = {};
@@ -9,6 +8,52 @@ function Lex() {
     this.type = new Set();           // 类型
     this.tokenName = new Set(['identifier', 'integer-literal', 'real-literal', 'science']);
     this.nfaBegin = 'begin';
+    deal = function(element){
+        if (element === ' ') {
+            return 'space';
+        }
+        else {
+            return element;
+        }
+    };
+    // 按照Set产生id
+    hashSet = function(dataSet){
+        let id = '';
+        // js Set()特殊处理
+        Array.from(dataSet).sort().forEach((value, index) => {
+            if (index === 0) {
+                id += value;
+            }
+            else {
+                id = id + '&' + value;
+            }
+        });
+        return id;
+    };
+
+    moveTo = function(vt, State, nfa){
+        let templateSet = new Set();
+        let isEndNode = false;
+        let endName = '';
+        for (let vn of State['dataSet']) {
+            if (nfa[vn]['edge'].hasOwnProperty(vt)) {
+                for (let i in nfa[vn]['edge'][vt]){
+                    templateSet.add(nfa[vn]['edge'][vt][i]);
+                }
+            }
+            if (nfa[vn]['edge'].hasOwnProperty('&')) {
+                isEndNode = true;
+                endName = nfa[vn]['endName'];
+            }
+        }
+        let newState = {
+            isEndNode : isEndNode,
+            endName : endName,
+            dataSet : templateSet
+        };
+        return newState;
+    }
+
     // 文法 --> NFA
     this.transNFA = function(grammer, endName){
         for (let i in grammer) {
@@ -92,44 +137,6 @@ function Lex() {
         }
     };
 
-    // 按照Set产生id
-    hashSet = function(dataSet){
-        let id = '';
-        // js Set()特殊处理
-        Array.from(dataSet).sort().forEach((value, index) => {
-            if (index === 0) {
-                id += value;
-            }
-            else {
-                id = id + '&' + value;
-            }
-        });
-        return id;
-    };
-
-    moveTo = function(vt, State, nfa){
-        let templateSet = new Set();
-        let isEndNode = false;
-        let endName = '';
-        for (let vn of State['dataSet']) {
-            if (nfa[vn]['edge'].hasOwnProperty(vt)) {
-                for (let i in nfa[vn]['edge'][vt]){
-                    templateSet.add(nfa[vn]['edge'][vt][i]);
-                }
-            }
-            if (nfa[vn]['edge'].hasOwnProperty('&')) {
-                isEndNode = true;
-                endName = nfa[vn]['endName'];
-            }
-        }
-        let newState = {
-            isEndNode : isEndNode,
-            endName : endName,
-            dataSet : templateSet
-        };
-        return newState;
-    }
-
     this.getToken = function(input, row){
         let col = 1;
         let e = 0;
@@ -198,15 +205,6 @@ function Lex() {
             }
         }
         
-    }
-
-    deal = function(element) {
-        if (element === ' ') {
-            return 'space';
-        }
-        else {
-            return element;
-        }
     }
 
     this.setKeyword = function(keyword){

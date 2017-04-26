@@ -2,9 +2,9 @@ const fs = require('fs');
 const color = require('colors');
 const express = require('express');
 const Syntax = require('./syntax.js');
-const data = fs.readFileSync('./syn_grammer.txt', 'utf-8').split('\r\n');
-// const data = fs.readFileSync('./syn_grammer1.txt', 'utf-8').split('\r\n');
-// const data = fs.readFileSync('./syn_grammer2.txt', 'utf-8').split('\r\n');
+const data = fs.readFileSync('./syn_grammar.txt', 'utf-8').split('\r\n');
+// const data = fs.readFileSync('./syn_grammar1.txt', 'utf-8').split('\r\n');
+// const data = fs.readFileSync('./syn_grammar2.txt', 'utf-8').split('\r\n');
 const test = new Syntax();
 // 读取语法文法
 for (let i in data) {
@@ -22,12 +22,11 @@ for(let vn of test.vn.values()){
 test.getSyntaxDFA();
 //建立action goto表
 test.getAction_Goto();
-// console.log(test.vn);
-// console.log(test.vt);
 let app = new express();
 app.get('/', (req, res) => res.send(test.projectSet));
 app.get('/action', (req, res) => res.send(test.action));
 app.get('/goto', (req, res) => res.send(test.goto));
+app.get('/exp', (req, res) => res.send(test.exp_dic));
 app.listen(3000, (req, res) => console.log('syntax is running...'));
 let token = fs.readFileSync('./out.txt', 'utf-8').split('\r\n');
 let begin = 0;
@@ -75,7 +74,7 @@ while (token.length > 0) {
                 token.unshift(t);
                 let index = action[state[i]][t]['next'];
                 let temp = exp[index][0];
-                console.log('规约式:'.yellow + exp[index][0] + '->' + exp[index][1]);
+                console.log('规约式'.yellow + index + ':'.yellow + exp[index][0] + '->' + exp[index][1]);
                 if (exp[index][1].length === 1 && exp[index][1][0] === '$') {
                     token.unshift(temp);
                 }

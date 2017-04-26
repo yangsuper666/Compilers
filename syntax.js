@@ -1,4 +1,3 @@
-const colors = require('colors');
 function Syntax(){
     this.vn = new Set();   // 记录非终结符
     this.vt = new Set();   // 记录终结符
@@ -10,59 +9,7 @@ function Syntax(){
     this.action = [];      // action表
     this.goto = [];        // goto表
     let src = {index : 0, pos : 0, fro : new Set(['#']), length : 1};  // 初始项
-    
-    // 读取文法
-    this.readSyn = function(grammer, index){
-        let noterminate = grammer.split(':')[0];
-        this.vn.add(noterminate);
-        let production = grammer.split(':')[1].split(' ');
-        for (let i in production) {
-            this.v.add(production[i]);
-        }
-        this.v.add(noterminate);
-        if (!this.exp_dic.hasOwnProperty(noterminate)) {
-            this.exp_dic[noterminate] = [];
-        }
-        this.exp_dic[noterminate].push([production, index]);
-        this.exp.push([noterminate, production]);
-    }
 
-    // 获取终结符和非终结符
-    this.getVn_Vt = function(){
-        // 求差集
-        this.vt = new Set([... this.v].filter(v => !this.vn.has(v)));
-        this.vt.forEach(vt => this.firstSet[vt] = new Set([vt]));
-    }
-
-    // 求出First集
-    this.getFirstSet = function(v, all){
-        if (this.firstSet.hasOwnProperty(v)) {
-            return this.firstSet[v];
-        }
-        all.add(v);
-        let first = new Set();
-        for (let i = 0; i < this.exp_dic[v].length; i++) {
-            for (let j = 0; j < this.exp_dic[v][i][0].length; j++) {
-                let element = this.exp_dic[v][i][0][j];
-                if (all.has(element)) {
-                    continue;
-                }
-                let tempSet = new Set();
-                if (this.firstSet.hasOwnProperty(element)) {
-                    tempSet = this.firstSet[element];
-                }
-                else {
-                    tempSet = this.getFirstSet(element, all);
-                }
-                first = new Set([... first, ... tempSet]);
-                if (!tempSet.has('$')) {
-                    break;
-                }
-            }
-        }
-        return first;
-    }
-    
     //hash项目
     hashSet = function(item){
         let hash = '';
@@ -152,6 +99,57 @@ function Syntax(){
             i++;
         }
         return closure;
+    }
+    // 读取文法
+    this.readSyn = function(grammer, index){
+        let noterminate = grammer.split(':')[0];
+        this.vn.add(noterminate);
+        let production = grammer.split(':')[1].split(' ');
+        for (let i in production) {
+            this.v.add(production[i]);
+        }
+        this.v.add(noterminate);
+        if (!this.exp_dic.hasOwnProperty(noterminate)) {
+            this.exp_dic[noterminate] = [];
+        }
+        this.exp_dic[noterminate].push([production, index]);
+        this.exp.push([noterminate, production]);
+    }
+
+    // 获取终结符和非终结符
+    this.getVn_Vt = function(){
+        // 求差集
+        this.vt = new Set([... this.v].filter(v => !this.vn.has(v)));
+        this.vt.forEach(vt => this.firstSet[vt] = new Set([vt]));
+    }
+
+    // 求出First集
+    this.getFirstSet = function(v, all){
+        if (this.firstSet.hasOwnProperty(v)) {
+            return this.firstSet[v];
+        }
+        all.add(v);
+        let first = new Set();
+        for (let i = 0; i < this.exp_dic[v].length; i++) {
+            for (let j = 0; j < this.exp_dic[v][i][0].length; j++) {
+                let element = this.exp_dic[v][i][0][j];
+                if (all.has(element)) {
+                    continue;
+                }
+                let tempSet = new Set();
+                if (this.firstSet.hasOwnProperty(element)) {
+                    tempSet = this.firstSet[element];
+                }
+                else {
+                    tempSet = this.getFirstSet(element, all);
+                }
+                first = new Set([... first, ... tempSet]);
+                if (!tempSet.has('$')) {
+                    break;
+                }
+            }
+        }
+        return first;
     }
     
     // 构造项目集族
