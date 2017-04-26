@@ -47,8 +47,8 @@ function Lex() {
     this.tokenName = new Set(['identifier', 'integer-literal', 'real-literal', 'science', 'string']);
     this.nfaBegin = 'begin';
   	deal = function(element) {};                      // 私有函数处理空格
-  	hashSet = function(dataSet){};					  // js没有像py的hash函数，所以手写一个生成唯一id标记dfa
-    moveTo = function(vt, State, nfa){};              // NFA->DFA时采用的moveTo()
+  	hashSet = function(dataSet){};		          // js没有像py的hash函数，所以手写一个生成唯一id标记dfa
+        moveTo = function(vt, State, nfa){};              // NFA->DFA时采用的moveTo()
   	this.transNFA = function(grammer, endName){};     // 生成NFA
   	this.transDFA = function(){};                     // NFA->DFA
    	this.getToken = function(input, row){};           // 在lex_parser.js中调用产生token
