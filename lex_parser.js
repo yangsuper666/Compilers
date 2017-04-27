@@ -91,6 +91,6 @@ if (flag === 0) {
     fs.appendFileSync('./out.txt', '#', option);
 }
 let app = new express();
-app.get('/nfs', (req, res) => res.send(test.nfa));
+app.get('/nfa', (req, res) => res.send(test.nfa));
 app.get('/', (req, res) => res.send(test.dfa));
-app.listen(3000, (req, res) => console.log('lex is running...'));
+app.listen(3000, (req, res) => console.log('lex_parse is finish!'));

@@ -29,6 +29,76 @@
 
 ​    采用LR(1)来进行语法分析。在开始写语法分析，我发现构造语法文法是比较难的,我从学长的介绍找到了[http://www.nongnu.org/hcb/](http://www.nongnu.org/hcb/) 来写了一个简单的2型文法,但是只能分析简单的类C语言代码。
 
+## 样例
+
+### 词法分析
+
+<img src="img/1.png">
+
+```input.cc```源文件(部分)
+
+```c
+int a1 ++;
+double b = 2.3;
+int a = 1, b = 234 , c = 2e4;
+function int max(int a,int b){
+    if ( a>b ) return  a;
+    else return b;
+}
+```
+
+```lex_out.txt```词法分析结果
+
+```markdown
+1:1 int int
+1:2 identifier a
+1:3 = =
+1:4 integer-literal 1
+1:5 ; ;
+2:1 int int
+2:2 identifier b
+2:3 = =
+2:4 integer-literal 1
+2:5 ; ;
+3:1 int int
+3:2 identifier c
+3:3 = =
+3:4 identifier a
+3:5 + +
+3:6 identifier b
+3:7 ; ;
+```
+
+```dfa```
+
+<img src="img/4.png">
+
+```nfa```
+
+<img src="img/5.png">
+
+### 语法分析 
+
+```ACCEPT```
+
+<img src="img/2.png">
+
+```ERROR```
+
+<img src="img/3.png">
+
+```项目集```
+
+<img src="img/6.png">
+
+```action```
+
+<img src="img/7.png">
+
+```goto```
+
+<img src="img/8.png">
+
 ## 代码说明
 
 ### 词法分析代码说明
@@ -47,14 +117,14 @@ function Lex() {
     this.tokenName = new Set(['identifier', 'integer-literal', 'real-literal', 'science', 'string']);
     this.nfaBegin = 'begin';
     deal = function(element) {};                      // 私有函数处理空格
-    hashSet = function(dataSet){};		      // js没有像py的hash函数，所以手写一个生成唯一id标记dfa
+    hashSet = function(dataSet){};		              // js没有像py的hash函数，所以手写一个生成唯一id标记dfa
     moveTo = function(vt, State, nfa){};              // NFA->DFA时采用的moveTo()
     this.transNFA = function(grammer, endName){};     // 生成NFA
     this.transDFA = function(){};                     // NFA->DFA
     this.getToken = function(input, row){};           // 在lex_parser.js中调用产生token
     this.setKeyword = function(keyword){};            // 在lex_parser.js中调用设置关键字
-    this.setType = function(type){};		      // 在lex_parser.js中调用设置类型
-    this.logNFA = function(){};			      // 输出NFA图
+    this.setType = function(type){};		          // 在lex_parser.js中调用设置类型
+    this.logNFA = function(){};			              // 输出NFA图
     this.logDFA = function(){};                       // 输出DFA图
 }
 ```
@@ -127,7 +197,7 @@ function Syntax() {
 一.仍然采用nodejs的fs模块对语法文法文件syn_grammar.txt进行读取。并递交给syntax.js的readSyn()进行处理。
 
 二.syntax_parser.js调用getVn_Vt()方法从文法中提取终结符和非终结符，并且在提取的同时调用getFirstSet()方法进行first集的计算。
-	1.下面对getFirstSet()函数进行分析，在求firset集时，我采用的是根据定义来求得first集，采用递归的方法来求first	   集合, 用all来维护该非终结符/终结符的first集(all为Set类型,可以去重)。
+	1.下面对getFirstSet()函数进行分析，在求firset集时，我采用的是根据定义来求得first集，采用递归的方法来求first	   集合, 用all来维护该非终结符/终结符集合防止重复求解(all为Set类型,可以去重)。
 
 三.syntax_parser.js调用getSyntaxDFA()方法来构造项目集
 	1.根据LR(1)项目集族构造函数算法生成项目集合,在扩展项目集合时候,有两个判重函数，判断是否产生重复的项目和项目集		 族。
@@ -138,9 +208,130 @@ function Syntax() {
 五.syntax_parser.js实现读入token,根据action&goto表分析,来判断语法正确性
 ```
 
+## 关键代码
 
+```transDFA``` (采用子集法将NFA转换成DFA)
 
+```javascript
+this.transDFA = function(){
+  beginState = {                                    // 初始节点
+    isVist : false,                                 // isVisit 来标记是否访问过
+    isEndNode : false,                              // isEndNode 来标记是否为终结点
+    dataSet : new Set([this.nfaBegin])              
+  }; 
+  stateSet = {};
+  this.dfaBegin = hashSet(beginState['dataSet']);    
+  stateSet[this.dfaBegin] = beginState;             // hash值来唯一标识DFA节点
+  let flag = true;
+  while (flag) {
+    flag = false;
+    for (let key in stateSet) {
+      if (!stateSet[key]['isVist']) {
+        stateSet[key]['isVist'] = true;              // 若未访问则加入DFA中
+        if (!this.dfa.hasOwnProperty(key)) {
+          this.dfa[key] = {
+            edge : {},                               // 边集来显示状态转移
+            isEndNode : stateSet[key]['isEndNode'],
+            dataSet : stateSet[key]['dataSet']
+          };
+        }
+        for (let vt of this.vt) {            
+          newState = {
+            isVist : false,
+            isEndNode : false,
+            dataSet : new Set()
+          };
+          let moveState = moveTo(vt, stateSet[key], this.nfa);      // moveTo函数生成转移状态
+          if (moveState.isEndNode) {
+            this.dfa[key]['isEndNode'] = true;
+            this.dfa[key]['endName'] = moveState.endName;
+          }
+          newState['dataSet'] = new Set([...newState['dataSet'], ...moveState['dataSet']]);
+          if (newState['dataSet'].size === 0) {
+            continue;
+          }
+          nextId = hashSet(newState['dataSet']);
+          //console.log(nextId);
+          if (!stateSet.hasOwnProperty(nextId)) {
+            stateSet[nextId] = newState;
+            flag = true;
+          }
+          this.dfa[key]['edge'][vt] = nextId;
+        }
+      }
+    }
+  }
+};
+```
 
+```求first集```
+
+```javascript
+this.getFirstSet = function(v, all){                 // 根据求First集的定义递归求解用all来维护集合
+  if (this.firstSet.hasOwnProperty(v)) {             // 如果是终结符，则返回自身
+    return this.firstSet[v];
+  } 
+  all.add(v);                                               
+  let first = new Set();
+  for (let i = 0; i < this.exp_dic[v].length; i++) {
+    for (let j = 0; j < this.exp_dic[v][i][0].length; j++) {
+      let element = this.exp_dic[v][i][0][j];
+      if (all.has(element)) {                         // 防止重复求解
+        continue;
+      }
+      let tempSet = new Set();
+      if (this.firstSet.hasOwnProperty(element)) {
+        tempSet = this.firstSet[element];
+      }
+      else {
+        tempSet = this.getFirstSet(element, all);
+      }
+      first = new Set([... first, ... tempSet]);
+      if (!tempSet.has('$')) {
+        break;
+      }
+    }
+  }
+  return first;
+}
+```
+
+```求闭包```
+
+```javascript
+getClosure = function(item, par){
+  let closure = [];
+  closure.push(item);
+  let i = 0;
+  while (i < closure.length) {
+    let exp_id = closure[i].index;
+    let exp_pos = closure[i].pos;
+    let target = par.exp[exp_id][1][exp_pos];
+    if (par.vt.has(target)) {
+      i++;
+      continue;
+    }
+    let front = getExtend(par.exp[exp_id], par.firstSet, closure[i]);
+    for (let j in par.exp_dic[target]) {
+      let node_id = parseInt(par.exp_dic[target][j][1]);
+      let length = par.exp_dic[target][j][0].length;
+      let tempItem = {index :node_id, pos : 0, fro : front, length : length};
+      let hash = hashSet(tempItem);
+      tempItem['hash'] = hash;
+      let flag = isInPro(closure, tempItem);
+      if ( flag === -1){
+        closure.push(tempItem);
+      }
+      else {
+        closure[flag]['fro'] = new Set([... tempItem['fro'], ... closure[flag]['fro']]);
+        closure[flag]['hash'] = hashSet(closure[flag]);
+      }
+    }
+    i++;
+  }
+  return closure;
+}
+```
 
 ## look out
 
