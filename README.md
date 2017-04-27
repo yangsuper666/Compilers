@@ -12,7 +12,7 @@
 
 2. 进入项目后执行 npm install 安装包主要为express和colors(编写代码时方便显示信息)
 
-3. 先将待分析词法输入input.cc文件中,执行 node lex_parser.js !在浏览器中输入localhost:3000可以查看生成的nfa，输入localhost:3000/nfa可以查看到生成的nfa
+3. 先将待分析词法输入input.cc文件中,执行 node lex_parser.js !在浏览器中输入localhost:3000可以查看生成的dfa，输入localhost:3000/nfa可以查看到生成的nfa
 
 4. 词法分析接受后执行node syntax_parser.js 在终端可以看到输出的分析表，同样访问localhost:3000可以查看生成的项目集,输入localhost:3000/action可以查看action表,输入localhost:3000/goto可以查看goto表
 ```
